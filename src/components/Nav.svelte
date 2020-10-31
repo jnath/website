@@ -1,60 +1,140 @@
-<script lang="ts">
-	export let segment: string;
+<script context="module" lang="ts">
+  interface Bookmark {
+    uuid: string;
+    title: string;
+    logo: string;
+    plugin: string;
+    props: object;
+  }
+  export async function preload() {
+    console.log("nav");
+    const res = await this.fetch("/bookmarks.json");
+    const bookmarks = await res.json();
+    console.log("nav", bookmarks);
+    return { bookmarks };
+  }
 </script>
 
-<style>
-	nav {
-		border-bottom: 1px solid rgba(255,62,0,0.1);
-		font-weight: 300;
-		padding: 0 1em;
-	}
+<script lang="ts">
+  import { mdiMenu } from "@mdi/js";
 
-	ul {
-		margin: 0;
-		padding: 0;
-	}
+  import {
+    Avatar,
+    Button,
+    Icon,
+    ListItem,
+    NavigationDrawer,
+    List,
+    Overlay,
+  } from "svelte-materialify";
 
-	/* clearfix */
-	ul::after {
-		content: '';
-		display: block;
-		clear: both;
-	}
+  export let bookmarks: Bookmark[] = [];
 
-	li {
-		display: block;
-		float: left;
-	}
+  let active = false;
+  function toggleNavigation() {
+    active = !active;
+  }
 
-	[aria-current] {
-		position: relative;
-		display: inline-block;
-	}
+  function close() {
+    active = false;
+  }
 
-	[aria-current]::after {
-		position: absolute;
-		content: '';
-		width: calc(100% - 1em);
-		height: 2px;
-		background-color: rgb(255,62,0);
-		display: block;
-		bottom: -1px;
-	}
+  import { onMount } from "svelte";
+  $: smallAndDown = true;
+  onMount(async () => {
+    const breakpoints = (
+      await import("svelte-materialify/src/utils/breakpoints")
+    ).default;
 
-	a {
-		text-decoration: none;
-		padding: 1em 0.5em;
-		display: block;
-	}
+    // check if screen size is less than or equal to medium
+    smallAndDown = window.matchMedia(breakpoints["sm-and-down"]).matches;
+    let timer = null;
+    addEventListener("resize", () => {
+      smallAndDown = window.matchMedia(breakpoints["sm-and-down"]).matches;
+    });
+    addEventListener("mousemove", (e: MouseEvent) => {
+      if (smallAndDown) return;
+      if (e.pageX < 15) {
+        if (timer) {
+          clearTimeout(timer);
+        }
+        active = true;
+      } else if (active && e.pageX > 56) {
+        if (timer) {
+          clearTimeout(timer);
+        }
+        timer = setTimeout(() => {
+          active = false;
+        }, 250);
+      }
+    });
+    document.addEventListener("mouseleave", () => {
+      if (smallAndDown) return;
+      if (timer) {
+        clearTimeout(timer);
+      }
+      timer = setTimeout(() => {
+        active = false;
+      }, 250);
+    });
+  });
+
+  console.log(bookmarks);
+</script>
+
+<style type="text/scss">
+  @import "svelte-materialify/src/styles/variables";
+  .nav-menu {
+    position: fixed;
+    height: 100%;
+    z-index: 99;
+    @media #{map-get($display-breakpoints, "sm-and-down")} {
+      :global(.s-navigation-drawer__content) {
+        margin-top: 56px;
+      }
+    }
+  }
+  .btn-menu {
+    position: fixed;
+    z-index: 9999;
+
+    :global(.s-btn) {
+      width: 40px;
+      height: 40px;
+      margin: 8px;
+      background-color: rgba(#000000, 0.25);
+    }
+  }
 </style>
 
-<nav>
-	<ul>
-		<li><a aria-current="{segment === undefined ? 'page' : undefined}" href=".">home</a></li>
-		<li><a aria-current="{segment === 'about' ? 'page' : undefined}" href="about">about</a></li>
+{#if smallAndDown}
+  <div class="btn-menu">
+    <Button fab depressed on:click={toggleNavigation}>
+      <Icon path={mdiMenu} />
+    </Button>
+  </div>
+{/if}
 
-		<!-- for the blog link, we're using rel=prefetch so that Sapper prefetches
-		     the blog data when we hover over the link or tap it on a touchscreen -->
-		<li><a rel=prefetch aria-current="{segment === 'blog' ? 'page' : undefined}" href="blog">blog</a></li>
-	</ul>
-</nav>
+<div class="nav-menu">
+  <NavigationDrawer borderless mini {active}>
+    <ListItem>
+      <span slot="prepend" class="ml-n2">
+        <Avatar size={40}>
+          <img src="//picsum.photos/200" alt="profile" />
+        </Avatar>
+      </span>
+      Mudit Somani
+    </ListItem>
+    <List dense nav>
+      {#each bookmarks as bookmark, i}
+        <ListItem>
+          <span slot="prepend">
+            <img width={32} height={32} src={bookmark.logo} alt="logo" />
+          </span>
+          {bookmark.title}
+        </ListItem>
+      {/each}
+    </List>
+  </NavigationDrawer>
+</div>
+<Overlay index={1} {active} opacity={0} on:click={close} absolute />
