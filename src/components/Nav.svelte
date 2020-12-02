@@ -1,23 +1,7 @@
-<script context="module" lang="ts">
-  interface Bookmark {
-    uuid: string;
-    title: string;
-    logo: string;
-    plugin: string;
-    props: object;
-  }
-  export async function preload() {
-    console.log("nav");
-    const res = await this.fetch("/bookmarks.json");
-    const bookmarks = await res.json();
-    console.log("nav", bookmarks);
-    return { bookmarks };
-  }
-</script>
-
 <script lang="ts">
+  import { goto } from '@sapper/app';
   import { mdiMenu } from "@mdi/js";
-
+  
   import {
     Avatar,
     Button,
@@ -25,10 +9,10 @@
     ListItem,
     NavigationDrawer,
     List,
-    Overlay,
+    Overlay
   } from "svelte-materialify";
-
-  export let bookmarks: Bookmark[] = [];
+  
+  import bookmarks, { sync } from "../stores/bookmarks";
 
   let active = false;
   function toggleNavigation() {
@@ -42,6 +26,8 @@
   import { onMount } from "svelte";
   $: smallAndDown = true;
   onMount(async () => {
+    sync()
+
     const breakpoints = (
       await import("svelte-materialify/src/utils/breakpoints")
     ).default;
@@ -79,7 +65,17 @@
     });
   });
 
-  console.log(bookmarks);
+  function onClick(bookmark) {
+    return ()=>{
+      goto(`/bookmark/${bookmark.uuid}`)
+    }
+  }
+
+  function showProfile(){
+    return ()=>{
+      goto('/profile')
+    }
+  }
 </script>
 
 <style type="text/scss">
@@ -117,7 +113,7 @@
 
 <div class="nav-menu">
   <NavigationDrawer borderless mini {active}>
-    <ListItem>
+    <ListItem on:click={showProfile()}>
       <span slot="prepend" class="ml-n2">
         <Avatar size={40}>
           <img src="//picsum.photos/200" alt="profile" />
@@ -126,10 +122,10 @@
       Mudit Somani
     </ListItem>
     <List dense nav>
-      {#each bookmarks as bookmark, i}
-        <ListItem>
+      {#each $bookmarks as bookmark}
+        <ListItem on:click={onClick(bookmark)}>
           <span slot="prepend">
-            <img width={32} height={32} src={bookmark.logo} alt="logo" />
+            <img style="margin-top:6px;" width={24} height={24} src={bookmark.logo} alt="logo" />
           </span>
           {bookmark.title}
         </ListItem>

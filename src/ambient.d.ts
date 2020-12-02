@@ -44,5 +44,20 @@ declare namespace NodeJS {
   }
   export interface ProcessEnv {
     NODE_ENV: "development" | "production";
+    PORT: number;
   }
+}
+
+declare interface PluginProps {
+  label: string;
+  description: string;
+  type: string;
+  require?: boolean;
+  default?: any;
+  rules?: string[];
+  useForLogo?: boolean;
+}
+
+declare module "*.svelte" {
+  export const props: PluginProps;
 }

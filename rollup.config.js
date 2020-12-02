@@ -11,6 +11,7 @@ import typescript from "@rollup/plugin-typescript";
 import alias from "@rollup/plugin-alias";
 import config from "sapper/config/rollup.js";
 import pkg from "./package.json";
+import dynamicImportVars from "@rollup/plugin-dynamic-import-vars";
 
 const mode = process.env.NODE_ENV;
 const dev = mode === "development";
@@ -103,6 +104,7 @@ export default {
         "process.browser": false,
         "process.env.NODE_ENV": JSON.stringify(mode),
       }),
+
       svelte({
         generate: "ssr",
         hydratable: true,
@@ -119,6 +121,9 @@ export default {
       }),
       commonjs(),
       typescript({ sourceMap: dev }),
+      dynamicImportVars({
+        // options
+      }),
     ],
     external: Object.keys(pkg.dependencies).concat(
       require("module").builtinModules
