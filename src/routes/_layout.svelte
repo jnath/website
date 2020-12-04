@@ -1,22 +1,40 @@
-<script>
-	import Nav from '../components/Nav.svelte';
+<script lang="ts">
+  import { MaterialApp } from "svelte-materialify";
+  import client, { setRefreshTokenProcess } from '../lib/axios'
+  import decode from "jwt-decode";
 
-	export let segment;
+  import { stores } from '@sapper/app';
+  const { page, session } = stores();
+  
+  export let segment;
+  if(process.browser){
+
+    page.subscribe(async ({ path }) => {
+      if ($session.refreshToken && $session.user?.exp <= Date.now() / 1000) {
+        const {
+          data: { token },
+        } = await client.post("/auth/token", {
+          refreshToken: $session.refreshToken,
+        });
+        $session.user = decode(token) as any;
+        $session.token = token;
+      }
+    });
+  
+    setRefreshTokenProcess($session, ['/auth/login', '/auth/register']);
+  }
+
 </script>
 
-<style>
-	main {
-		position: relative;
-		max-width: 56em;
-		background-color: white;
-		padding: 2em;
-		margin: 0 auto;
-		box-sizing: border-box;
-	}
+<style global type="text/scss">
+  a {
+    text-decoration: none;
+  }
+  :global(.s-app) {
+    height: 100vh;
+  }
 </style>
 
-<Nav {segment}/>
-
-<main>
-	<slot></slot>
-</main>
+<MaterialApp theme="dark">
+  <slot {segment} />
+</MaterialApp>

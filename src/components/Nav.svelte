@@ -1,60 +1,136 @@
-<script>
-	export let segment;
+<script lang="ts">
+  import { goto } from '@sapper/app';
+  import { mdiMenu } from "@mdi/js";
+  
+  import {
+    Avatar,
+    Button,
+    Icon,
+    ListItem,
+    NavigationDrawer,
+    List,
+    Overlay
+  } from "svelte-materialify";
+  
+  import bookmarks, { sync } from "../stores/bookmarks";
+
+  let active = false;
+  function toggleNavigation() {
+    active = !active;
+  }
+
+  function close() {
+    active = false;
+  }
+
+  import { onMount } from "svelte";
+  $: smallAndDown = true;
+  onMount(async () => {
+    sync()
+
+    const breakpoints = (
+      await import("svelte-materialify/src/utils/breakpoints")
+    ).default;
+
+    // check if screen size is less than or equal to medium
+    smallAndDown = window.matchMedia(breakpoints["sm-and-down"]).matches;
+    let timer = null;
+    addEventListener("resize", () => {
+      smallAndDown = window.matchMedia(breakpoints["sm-and-down"]).matches;
+    });
+    addEventListener("mousemove", (e: MouseEvent) => {
+      if (smallAndDown) return;
+      if (e.pageX < 15) {
+        if (timer) {
+          clearTimeout(timer);
+        }
+        active = true;
+      } else if (active && e.pageX > 56) {
+        if (timer) {
+          clearTimeout(timer);
+        }
+        timer = setTimeout(() => {
+          active = false;
+        }, 250);
+      }
+    });
+    document.addEventListener("mouseleave", () => {
+      if (smallAndDown) return;
+      if (timer) {
+        clearTimeout(timer);
+      }
+      timer = setTimeout(() => {
+        active = false;
+      }, 250);
+    });
+  });
+
+  function onClick(bookmark) {
+    return ()=>{
+      goto(`/bookmark/${bookmark.uuid}`)
+    }
+  }
+
+  function showProfile(){
+    return ()=>{
+      goto('/profile')
+    }
+  }
 </script>
 
-<style>
-	nav {
-		border-bottom: 1px solid rgba(255,62,0,0.1);
-		font-weight: 300;
-		padding: 0 1em;
-	}
+<style type="text/scss">
+  @import "svelte-materialify/src/styles/variables";
+  .nav-menu {
+    position: fixed;
+    height: 100%;
+    z-index: 99;
+    @media #{map-get($display-breakpoints, "sm-and-down")} {
+      :global(.s-navigation-drawer__content) {
+        margin-top: 56px;
+      }
+    }
+  }
+  .btn-menu {
+    position: fixed;
+    z-index: 9999;
 
-	ul {
-		margin: 0;
-		padding: 0;
-	}
-
-	/* clearfix */
-	ul::after {
-		content: '';
-		display: block;
-		clear: both;
-	}
-
-	li {
-		display: block;
-		float: left;
-	}
-
-	[aria-current] {
-		position: relative;
-		display: inline-block;
-	}
-
-	[aria-current]::after {
-		position: absolute;
-		content: '';
-		width: calc(100% - 1em);
-		height: 2px;
-		background-color: rgb(255,62,0);
-		display: block;
-		bottom: -1px;
-	}
-
-	a {
-		text-decoration: none;
-		padding: 1em 0.5em;
-		display: block;
-	}
+    :global(.s-btn) {
+      width: 40px;
+      height: 40px;
+      margin: 8px;
+      background-color: rgba(#000000, 0.25);
+    }
+  }
 </style>
 
-<nav>
-	<ul>
-		<li><a aria-current="{segment === undefined ? 'page' : undefined}" href=".">home</a></li>
-		<li><a aria-current="{segment === 'about' ? 'page' : undefined}" href="about">about</a></li>
+{#if smallAndDown}
+  <div class="btn-menu">
+    <Button fab depressed on:click={toggleNavigation}>
+      <Icon path={mdiMenu} />
+    </Button>
+  </div>
+{/if}
 
-		<!-- for the blog link, we're using rel=prefetch so that Sapper prefetches
-		     the blog data when we hover over the link or tap it on a touchscreen -->
-		<li><a rel=prefetch aria-current="{segment === 'blog' ? 'page' : undefined}" href="blog">blog</a></li>
-	</ul>
-</nav>
+<div class="nav-menu">
+  <NavigationDrawer borderless mini {active}>
+    <ListItem on:click={showProfile()}>
+      <span slot="prepend" class="ml-n2">
+        <Avatar size={40}>
+          <img src="//picsum.photos/200" alt="profile" />
+        </Avatar>
+      </span>
+      Mudit Somani
+    </ListItem>
+    <List dense nav>
+      {#each $bookmarks as bookmark}
+        <ListItem on:click={onClick(bookmark)}>
+          <span slot="prepend">
+            <img style="margin-top:6px;" width={24} height={24} src={bookmark.logo} alt="logo" />
+          </span>
+          {bookmark.title}
+        </ListItem>
+      {/each}
+    </List>
+  </NavigationDrawer>
+</div>
+<Overlay index={1} {active} opacity={0} on:click={close} absolute />

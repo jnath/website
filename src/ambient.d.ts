@@ -9,31 +9,58 @@
 	 ```
  */
 declare module "*.gif" {
-	const value: string;
-	export = value;
+  const value: string;
+  export = value;
 }
 
 declare module "*.jpg" {
-	const value: string;
-	export = value;
+  const value: string;
+  export = value;
 }
 
 declare module "*.jpeg" {
-	const value: string;
-	export = value;
+  const value: string;
+  export = value;
 }
 
 declare module "*.png" {
-	const value: string;
-	export = value;
+  const value: string;
+  export = value;
 }
 
 declare module "*.svg" {
-	const value: string;
-	export = value;
+  const value: string;
+  export = value;
 }
 
 declare module "*.webp" {
-	const value: string;
-	export = value;
+  const value: string;
+  export = value;
+}
+
+declare namespace NodeJS {
+  export interface Process {
+    browser: boolean;
+  }
+  export interface ProcessEnv {
+    JWT_SECRET: string;
+    MONGODB_URI: string;
+    SESSION_SECRET: string;
+    NODE_ENV: "development" | "production";
+    PORT: number;
+  }
+}
+
+declare interface PluginProps {
+  label: string;
+  description: string;
+  type: string;
+  require?: boolean;
+  default?: any;
+  rules?: string[];
+  useForLogo?: boolean;
+}
+
+declare module "*.svelte" {
+  export const props: PluginProps;
 }

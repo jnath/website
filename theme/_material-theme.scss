@@ -1,0 +1,11 @@
+@import "svelte-materialify/src/styles/tools/functions";
+@import "svelte-materialify/src/styles/tools/colors";
+
+$body-font-family: "Poppins", "Segoe UI", sans-serif;
+
+$material-dark-theme: map-deep-merge(
+  (
+    "navigation-drawer": rgba(material-color("shades", "black"), 0.12),
+  ),
+  $material-dark-theme
+);
