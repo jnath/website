@@ -39,18 +39,6 @@ polka() // You can also use Express
     compression({ threshold: 0 }),
     sirv("static", { dev }),
     pluginMiddleware(),
-    // async (req, res, next) => {
-    //   const plugins = (await import("./plugins")).default;
-    //   Object.keys(plugins).forEach(async (name) => {
-    //     let plugin = null;
-    //     try {
-    //       plugin = (await plugins[name].server).default;
-    //     } catch (error) {}
-    //     if (plugin) {
-    //       plugin(req, res, next);
-    //     }
-    //   });
-    // },
     sapper.middleware({
       session: async (req) => {
         let user = null;
@@ -58,7 +46,6 @@ polka() // You can also use Express
           try {
             user = await verify(req.session.token);
           } catch (error) {
-            console.log("toutou", req.session);
             if (error.name === "TokenExpiredError") {
               const {
                 data: { token },

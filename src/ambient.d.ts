@@ -43,6 +43,9 @@ declare namespace NodeJS {
     browser: boolean;
   }
   export interface ProcessEnv {
+    JWT_SECRET: string;
+    MONGODB_URI: string;
+    SESSION_SECRET: string;
     NODE_ENV: "development" | "production";
     PORT: number;
   }

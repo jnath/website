@@ -8,7 +8,8 @@
     "export": "sapper export --legacy",
     "start": "node __sapper__/build",
     "validate": "svelte-check --ignore src/node_modules/@sapper",
-    "gen-jwt-secret": "openssl rand 256 | base64"
+    "gen-jwt-secret": "openssl rand 256 | base64",
+    "postinstall": "node ./scripts/get-config.js"
   },
   "dependencies": {
     "@mdi/js": "^5.8.55",
@@ -29,6 +30,7 @@
     "concat-stream": "^2.0.0",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
     "express-session": "^1.17.1",
     "http-proxy": "^1.18.1",
     "jsonwebtoken": "^8.5.1",
